@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>微课视频</title>
+    <link rel="stylesheet" href="../global.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: var(--bg-color);
+            font-family: var(--font-family);
+        }
+        
+        
+        .video-container {
+            width: 100%;
+            height: 100%;
+            background-color: #000;
+            overflow: hidden;
+        }
+        
+        .video-player {
+            width: 100%;
+            height: 100%;
+            object-fit: contain; /* 保持视频宽高比并自适应容器 */
+        }
+    </style>
+</head>
+<body>
+    <div class="video-container">
+        <video class="video-player" controls>
+            <source src="videos/lesson.mp4" type="video/mp4">
+            您的浏览器不支持HTML5视频播放器。
+        </video>
+    </div>
+</body>
+</html>

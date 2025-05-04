@@ -1,0 +1,60 @@
+<script src="https://cdn.jsdelivr.net/pyodide/v0.22.1/full/pyodide.js"></script>
+<script>
+async function initQuizSystem() {
+    try {
+        document.getElementById('loadingIndicator').style.display = 'block';
+        let pyodide = await loadPyodide();
+        await pyodide.loadPackage("micropip");
+        await pyodide.runPythonAsync(`
+            import micropip
+            await micropip.install('numpy')
+            
+            # 加载评估系统
+            ${PyodideQuizIntegration的代码}
+            
+            quiz = PyodideQuizIntegration()
+            quiz.init_quiz()
+        `);
+    } catch (error) {
+        console.error('初始化失败:', error);
+        document.getElementById('errorMessage').innerHTML = '系统加载失败，请刷新页面重试';
+        document.getElementById('errorMessage').style.display = 'block';
+    } finally {
+        document.getElementById('loadingIndicator').style.display = 'none';
+    }
+}
+
+initQuizSystem();
+</script>
+
+<iframe id="quizFrame" src="index.html" style="width:100%; height:600px;"></iframe>
+<script>
+    window.addEventListener('message', function(event) {
+        if (event.data.type === 'quizSystemReady') {
+            // 系统准备就绪
+            console.log('Quiz system ready');
+        } else if (event.data.type === 'quizResults') {
+            // 处理测试结果
+            console.log('Quiz results:', event.data.results);
+        }
+    });
+
+    // 控制测试系统
+    function startEmbeddedQuiz() {
+        document.getElementById('quizFrame').contentWindow.postMessage({
+            type: 'startQuiz'
+        }, '*');
+    }
+
+    function getQuizResults() {
+        document.getElementById('quizFrame').contentWindow.postMessage({
+            type: 'getResults'
+        }, '*');
+    }
+</script>
+
+<div id="loadingIndicator" style="display:none;">
+    加载中...
+</div>
+<div id="errorMessage" style="display:none;" class="alert alert-danger">
+</div>

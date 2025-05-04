@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI学习系统</title>
+    <!-- 公共样式 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/all.min.css" rel="stylesheet">
+    <!-- 全局样式变量 -->
+    <link rel="stylesheet" href="global.css">
+    <!-- 项目特定样式 -->
+    <link rel="stylesheet" href="xuni/style.css">
+    <link rel="stylesheet" href="wenda/styles.css">
+    <link rel="stylesheet" href="video/styles.css"> 
+    <!-- 公共脚本 -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.plot.ly/plotly-2.27.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <style>        
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+            background-color: var(--bg-color);
+            font-family: var(--font-family);
+        }
+        
+        .sidebar {
+            width: 100px;
+            background-color: var(--card-bg);
+            padding: var(--spacing-lg) 0;
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-shadow: var(--shadow-sm);
+            z-index: 100;
+        }
+        
+        .tab-button {
+            width: 80px;
+            height: 80px;
+            margin: 10px 0;
+            border: none;
+            background: none;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-radius: var(--border-radius-md);
+            transition: all var(--transition-normal);
+            color: var(--text-secondary);
+        }
+        
+        .tab-button:hover {
+            background-color: rgba(124, 58, 237, 0.05);
+            transform: translateY(-2px);
+        }
+        
+        .tab-button.active {
+            background-color: var(--primary-color);
+            color: white;
+            box-shadow: var(--shadow-md);
+        }
+        
+        .tab-button i {
+            font-size: 24px;
+            margin-bottom: var(--spacing-xs);
+        }
+        
+        .content-area {
+            flex: 1;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .content-frame {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+            display: none;
+        }
+        
+        .content-frame.active {
+            display: block;
+        }
+        
+        /* 背景装饰 */
+        .background-decoration {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+        }
+        
+        .decoration-circle {
+            position: absolute;
+            border-radius: 50%;
+            opacity: 0.1;
+        }
+        
+        .circle-1 {
+            width: 300px;
+            height: 300px;
+            background: linear-gradient(45deg, var(--primary-color), var(--accent-color));
+            top: -100px;
+            right: -100px;
+            animation: float 8s ease-in-out infinite;
+        }
+        
+        .circle-2 {
+            width: 200px;
+            height: 200px;
+            background: linear-gradient(45deg, var(--error-color), var(--warning-color));
+            bottom: -50px;
+            left: -50px;
+            animation: float 6s ease-in-out infinite reverse;
+        }
+        
+        .circle-3 {
+            width: 150px;
+            height: 150px;
+            background: linear-gradient(45deg, var(--secondary-color), var(--error-color));
+            top: 50%;
+            left: 30%;
+            animation: float 7s ease-in-out infinite;
+        }
+        
+        .grid-background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(0,0,0,0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0,0,0,0.05) 1px, transparent 1px);
+            background-size: 20px 20px;
+            opacity: 0.3;
+        }
+
+        /* 登出按钮 */
+        .logout-btn {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: none;
+            border: none;
+            color: #1E40AF;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all var(--transition-normal);
+            z-index: 9999;
+        }
+        
+        .logout-btn:hover {
+            color: #DC2626;
+        }
+        
+        .logout-btn i {
+            font-size: 20px;
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <!-- 背景装饰 -->
+    <div class="background-decoration">
+        <div class="decoration-circle circle-1"></div>
+        <div class="decoration-circle circle-2"></div>
+        <div class="decoration-circle circle-3"></div>
+        <div class="grid-background"></div>
+    </div>
+
+    <!-- 左侧导航栏 -->
+    <div class="sidebar">
+        <button class="tab-button" data-tab="video">
+            <i class="fas fa-play-circle"></i>
+            <span>微课视频</span>
+        </button>
+
+        <button class="tab-button active" data-tab="polynomial">
+            <i class="fas fa-chart-line"></i>
+            <span>多项式拟合</span>
+        </button>
+        <button class="tab-button" data-tab="quiz">
+            <i class="fas fa-brain"></i>
+            <span>知识评估</span>
+        </button>
+
+    </div>
+
+    <!-- 退出按钮 -->
+    <button class="logout-btn" id="logoutBtn">
+        <i class="fas fa-sign-out-alt"></i>
+        <span>退出</span>
+    </button>
+
+    <!-- 内容区域 -->
+    <div class="content-area">
+        <iframe id="polynomial-frame" class="content-frame active" src="xuni/index.html"></iframe>
+        <iframe id="quiz-frame" class="content-frame" src="wenda/index.html"></iframe>
+        <iframe id="video-frame" class="content-frame" src="video/video-player.html"></iframe>
+    </div>
+
+    <script>
+        // 检查登录状态
+        function checkLoginStatus() {
+            const isLoggedIn = sessionStorage.getItem('isLoggedIn');
+            if (!isLoggedIn) {
+                window.location.href = 'login.html';
+            }
+        }
+        
+        // 页面加载时检查登录状态
+        checkLoginStatus();
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            const tabButtons = document.querySelectorAll('.tab-button');
+            const frames = document.querySelectorAll('.content-frame');
+
+            tabButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    // 移除所有active类
+                    tabButtons.forEach(btn => btn.classList.remove('active'));
+                    frames.forEach(frame => frame.classList.remove('active'));
+
+                    // 添加active类到当前按钮和对应的frame
+                    this.classList.add('active');
+                    const tabId = this.getAttribute('data-tab');
+                    document.getElementById(`${tabId}-frame`).classList.add('active');
+                });
+            });
+            
+            // 退出按钮事件
+            document.getElementById('logoutBtn').addEventListener('click', function() {
+                sessionStorage.removeItem('isLoggedIn');
+                sessionStorage.removeItem('username');
+                window.location.href = 'login.html';
+            });
+        });
+    </script>
+</body>
+</html> 
